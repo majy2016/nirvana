@@ -1,2 +1,6 @@
-https://buff.163.com/api/market/goods/buy_order?game=pubg&goods_id=756022&page_num=1&_=1523639198390
-https://buff.163.com/api/market/goods/sell_order?game=pubg&goods_id=756022&page_num=1&sort_by=price&mode=&allow_tradable_cooldown=1&_=1523815311432
+sys_msg:
+id,msg,time
+
+balance_in_out:
+id,order,type,order_amount,balance,time
+
