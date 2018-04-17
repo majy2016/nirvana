@@ -10,7 +10,7 @@
  Target Server Version : 3008004
  File Encoding         : utf-8
 
- Date: 04/18/2018 00:19:30 AM
+ Date: 04/18/2018 01:04:54 AM
 */
 
 PRAGMA foreign_keys = false;
@@ -24,6 +24,7 @@ CREATE TABLE "goods_sell_buy" (
 	 "sell_order" text,
 	 "buy_order" text,
 	 "back_status" integer,
+	 "price" real,
 	 "time" text,
 	PRIMARY KEY("goods_id")
 );
