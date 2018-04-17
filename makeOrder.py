@@ -25,6 +25,17 @@ def make(rows):
     goods_price = getGoodsPrice(goods_id)
     if goods_price is False:
         return "1"
+    if(goods_price["sell_price"]-goods_price["buy_price"])>=rows[4]:
+        if rows[1] is None:
+            if rows[3] == 0:
+                pass
+            else:
+                #todo 上架
+        else:
+            #todo 查询是否已卖掉
+
+
+
     list_back_goods = getBackpack()
     if list_back_goods is False:
         return "2"
