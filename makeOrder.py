@@ -28,11 +28,11 @@ def start():
             r = createBuyOrder(goods_id, price, num, pay_method)
             r = r.replace("null",111)
             r = eval(r)
+            print("求购结果 =========================================>>>>>>>>",r)
             if r["code"] =="OK":
                 s = r["data"]["id"]+"|"+str(price)
                 sql = "update goods_sell_buy set buy_order = %s WHERE goods_id = %d"%(s,goods_id)
                 until.sqlite_update(sql)
-                until.make_log("发布goods_id：%s 求购成功，price :%f" %(goods_id,price))
     # 上架
     sell()
     #出售调价
@@ -64,8 +64,7 @@ def changePrice(goods_id, sell_order_id, price):
     }
 
     r = until.make_request(url,"POST",data,headers)
-    if r["code"] =="OK":
-        until.make_log("goods_id :%s 改价  ，price ：%f" % (goods_id,price))
+    print("改价结果 =====================>>>>>>>>>>>>>>>",r)
 
 
 
@@ -110,7 +109,7 @@ def cancelBuyOrder(order_id):
     if r["code"] =="OK":
         sql = "update goods_sell_buy set buy_order = NULL WHERE  buy_order = %s"%order_id
         until.sqlite_update(sql)
-        until.make_log("取消求购 buy_order ： %s"%order_id)
+        print("取消求购 buy_order ： %s ====================================>>>>>>>>>>>>>>>>>"%order_id)
 
 
 # 查询求购信息
@@ -197,7 +196,7 @@ def sell():
                 sell_order = i
             sql = "update goods_sell_buy set back_object = NULL,set sell_order = %s WHERE goods_id = %d"% (sell_order,back_object["asset_info"]["goods_id"])
             until.sqlite_update(sql)
-            until.make_log("上架goods_id ：%s,价格：%f" % (str(back_object["asset_info"]["goods_id"]),price["sell_price"]))
+            print("上架goods_id ：%s,价格：%f =======================>>>>>>>>>>>>>>>>>>" % (str(back_object["asset_info"]["goods_id"]),price["sell_price"]))
 
 
 # 查询售卖列表
@@ -239,16 +238,16 @@ def getGoodsPrice(goods_id):
     url_buy = "https://buff.163.com/api/market/goods/buy_order?game=pubg&goods_id=" + goods_id + "&page_num=1"
     r_buy = until.make_request(url_buy,"GET",None,None)
     if r_buy is None:
-        until.make_log("获取goods_id : %s 求购价格失败 ."%goods_id)
+        print("获取goods_id : %s 求购价格失败 ."%goods_id)
         return False
     url_sell = "https://buff.163.com/api/market/goods/sell_order?game=pubg&goods_id=" + goods_id + "&page_num=1&sort_by=price&mode=&allow_tradable_cooldown=1"
     r_sell = until.make_request(url_sell, "GET",None,None)
     if r_sell is None:
-        until.make_log("获取goods_id : %s 出售价格失败 ."%goods_id)
+        print("获取goods_id : %s 出售价格失败 ."%goods_id)
         return False
     buy_price = buyprice(r_buy)
     sell_price = sellprice(r_sell)
-    until.make_log("goods_id: %s ,求购价格：%s ,出售价格: %s" % (goods_id,buy_price,sell_price))
+    print("goods_id: %s ,求购价格：%s ,出售价格: %s" % (goods_id,buy_price,sell_price))
     return {"goods_id":goods_id,"buy_price":buy_price,"sell_price":sell_price}
 
 def buyprice(str):
