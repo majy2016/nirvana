@@ -272,5 +272,3 @@ def sellprice(str):
         return float(a)
     else:
         return float(b)
-
-start()

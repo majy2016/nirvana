@@ -34,6 +34,7 @@ def make_headers(h):
 #记录信息
 def make_log(msg):
     #todo
+    print(msg)
     pass
 
 
