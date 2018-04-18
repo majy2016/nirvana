@@ -132,6 +132,7 @@ def getBuyList():
     # print(bs)
     list = bs.findAll("a", {"class": "i_Btn cancel-buy-order i_Btn_hollow"})
     for i in list:
+        print(i)
         print(i["data-orderid"])
 
 
@@ -162,7 +163,7 @@ def cancelBuyOrder(order_id):
     print(r.text)
 
 
-# cancelBuyOrder("180416T1094493203")
+# cancelBuyOrder("180417T1094492255")
 
 
 # 查询售卖列表
@@ -183,11 +184,14 @@ def getSellList():
     bs = BeautifulSoup(r.text, "lxml")
     # print(bs)
     list = bs.findAll("li", {"class": "salable"})
+    result = {}
     for i in list:
-        print(i["data-orderid"])
+        result[i["data-goodsid"]] = [i["data-orderid"],i["data-price"]]
+    print(result)
 
 
-# getSellList()
+
+getSellList()
 
 # 改价
 # https://buff.163.com/api/market/sell_order/change
@@ -215,7 +219,7 @@ def changePrice(goods_id, sell_order_id, price):
     print(r.text)
 
 
-# changePrice(33232,"180417T1095187850",0.6)
+changePrice(33232,"180417T1095187850",0.7)
 
 # 查询背包列表
 def getBackpack():
@@ -273,4 +277,4 @@ def sell(assetid,classid,contextid,instanceid,goods_id,price):
     print(r.status_code)
     print(r.text)
 
-sell("3007718010361719267", "2769169232", 2, "0", 756022, 2.87)
+# sell("3007718010361719267", "2769169232", 2, "0", 756022, 2.87)

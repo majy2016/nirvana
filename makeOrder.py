@@ -12,52 +12,105 @@ import until,json
 from bs4 import BeautifulSoup
 
 def start():
-    # sql = "select * from goods_sell_buy WHERE status = 1"
-    # x = until.sqlite_select(sql)
-    # for i in x:
-    #     #预处理
-    #     make(i)
-    #     price = getGoodsPrice(i[0])
-    #     # buy_order 为空才求购
-    #     if price["sell_price"] >= i[5] and i[2] is None:
-    #         #求购
-    #         goods_id = i[0]
-    #         price = price["buy_price"]
-    #         num = 1
-    #         pay_method = "3"
-    #         r = createBuyOrder(goods_id, price, num, pay_method)
-    #         print(type)
-    #         print(r)
-    #         if r["code"] =="OK":
-    #             sql = "update goods_sell_buy set buy_order = %s WHERE goods_id = %d"%(r["data"]["id"],goods_id)
-    #             until.sqlite_update(sql)
-    #             until.make_log("发布goods_id：%s 求购成功，price :%f" %(goods_id,price))
-    #上架
-    # sell();
+    sql = "select * from goods_sell_buy WHERE status = 1"
+    x = until.sqlite_select(sql)
+    for i in x:
+        #预处理
+        make(i)
+        price = getGoodsPrice(i[0])
+        # buy_order 为空才求购
+        if price["sell_price"] >= i[5] and i[2] is None:
+            #求购
+            goods_id = i[0]
+            price = price["buy_price"]
+            num = 1
+            pay_method = "3"
+            r = createBuyOrder(goods_id, price, num, pay_method)
+            print(type)
+            print(r)
+            if r["code"] =="OK":
+                s = r["data"]["id"]+"|"+str(price)
+                sql = "update goods_sell_buy set buy_order = %s WHERE goods_id = %d"%(s,goods_id)
+                until.sqlite_update(sql)
+                until.make_log("发布goods_id：%s 求购成功，price :%f" %(goods_id,price))
+    # 上架
+    sell()
     #出售调价
+    sell_change()
     #求购调整
-    buy_change();
+    buy_change()
+
+def sell_change():
+    sellDict = getSellList()
+    for i in sellDict:
+        r = getGoodsPrice(i)
+        if (float(sellDict[i][1])-r["sell_price"])>=0.1:
+            # 改价
+            changePrice(i,sellDict[i][0],r["sell_price"])
+
+
+def changePrice(goods_id, sell_order_id, price):
+    url = "https://buff.163.com/api/market/sell_order/change"
+
+    headers = {
+        'Content-Type': 'application/json',
+        "Referer": "https://buff.163.com/market/sell_order/on_sale?game=pubg",
+        "X-CSRFToken": "ImRjOTBjNDIzNzkyZDBkNTA5ZjYzZjUyMjdmODU3OGJmNzI4M2Y1YzMi.DbWb7Q.DX1hDwcW0RGjKN5-d5VJyzlR5IE"
+    }
+
+    data = {
+        "game": "pubg",
+        "sell_orders": [{"sell_order_id": sell_order_id, "price": price, "goods_id": goods_id}]
+    }
+
+    r = until.make_request(url,"POST",data,headers)
+    if r["code"] =="OK":
+        until.make_log("goods_id :%s 改价  ，price ：%f" % (goods_id,price))
+
 
 
 def buy_change():
-    sql = "select goods_id,buy_order,sell_price from goods_sell_buy WHERE buy_order is not NULL"
+    sql = "select * from goods_sell_buy WHERE buy_order is not NULL"
     r = until.sqlite_select(sql)
     buylist = getBuyList()
     for i in r :
         goods_id = i[0]
-        buy_order = i[1]
-        sell_price = i[2]
+        buy_order = i[2].split("|")[0]
+        now_buy_price = float(i[2].split("|")[1])
+        sell_price = i[5]
         if buy_order not in buylist:
             sql = "update goods_sell_buy set buy_order = NULL WHERE  goods_id = %s"%goods_id
             until.sqlite_update(sql)
             continue
         x = getGoodsPrice(goods_id)
-        if x["sell_price"] <sell_price:
+        if x and (x["sell_price"]-x["buy_price"]) <sell_price:
             #取消求购
-
+            cancelBuyOrder(buy_order)
             continue
-        print(x)
+        if (x["buy_price"] - now_buy_price) >0.1 :
+            cancelBuyOrder(buy_order)
 
+
+
+
+def cancelBuyOrder(order_id):
+    url = "https://buff.163.com/api/market/buy_order/cancel"
+    data = {
+        "game": "pubg",
+        "buy_orders": [order_id]
+    }
+    headers = {
+        'Content-Type': 'application/json',
+        "Referer": "https://buff.163.com/market/buy_order/wait_supply?game=pubg",
+        "X-CSRFToken": "ImRjOTBjNDIzNzkyZDBkNTA5ZjYzZjUyMjdmODU3OGJmNzI4M2Y1YzMi.DbWb7Q.DX1hDwcW0RGjKN5-d5VJyzlR5IE"
+    }
+    r = until.make_request(url,"POST",data,headers)
+    if r is None:
+        return False
+    if r["code"] =="OK":
+        sql = "update goods_sell_buy set buy_order = NULL WHERE  buy_order = %s"%order_id
+        until.sqlite_update(sql)
+        until.make_log("取消求购 buy_order ： %s"%order_id)
 
 
 # 查询求购信息
@@ -100,7 +153,6 @@ def make(rows):
     goods_price = getGoodsPrice(goods_id)
     if goods_price is False:
         return "1"
-
     list_back_goods = getBackpack()
     if list_back_goods is False:
         return "2"
