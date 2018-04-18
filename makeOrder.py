@@ -26,8 +26,8 @@ def start():
             num = 1
             pay_method = "3"
             r = createBuyOrder(goods_id, price, num, pay_method)
-            print(type)
-            print(r)
+            r = r.replace("null",111)
+            r = eval(r)
             if r["code"] =="OK":
                 s = r["data"]["id"]+"|"+str(price)
                 sql = "update goods_sell_buy set buy_order = %s WHERE goods_id = %d"%(s,goods_id)
