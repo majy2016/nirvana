@@ -19,19 +19,20 @@ def start():
         make(i)
         price = getGoodsPrice(i[0])
         # buy_order 为空才求购
-        if price["sell_price"] >= i[5] and i[2] is None:
+        if (price["sell_price"]-price["buy_price"]) >= i[5] and i[2] is None:
             #求购
             goods_id = i[0]
             price = price["buy_price"]
             num = 1
             pay_method = "3"
             r = createBuyOrder(goods_id, price, num, pay_method)
-            r = r.replace("null",111)
+            r = r.replace("null","1111")
             r = eval(r)
             print("求购结果 =========================================>>>>>>>>",r)
             if r["code"] =="OK":
                 s = r["data"]["id"]+"|"+str(price)
-                sql = "update goods_sell_buy set buy_order = %s WHERE goods_id = %d"%(s,goods_id)
+                sql = "update goods_sell_buy set buy_order = %s WHERE goods_id = %s"%(s,goods_id)
+                print(sql)
                 until.sqlite_update(sql)
     # 上架
     sell()
@@ -44,7 +45,7 @@ def sell_change():
     sellDict = getSellList()
     for i in sellDict:
         r = getGoodsPrice(i)
-        if (float(sellDict[i][1])-r["sell_price"])>=0.1:
+        if (float(sellDict[i][1])-r["sell_price"])>=0.03:
             # 改价
             changePrice(i,sellDict[i][0],r["sell_price"])
 
@@ -190,11 +191,13 @@ def sell():
             }]
         }
         r = until.make_request(url,"POST",data,headers)
+        r = r.replace("null","1111")
+        r = eval(r)
         if r["code"] =="OK":
             sell_order = None
             for i in r.keys():
                 sell_order = i
-            sql = "update goods_sell_buy set back_object = NULL,set sell_order = %s WHERE goods_id = %d"% (sell_order,back_object["asset_info"]["goods_id"])
+            sql = "update goods_sell_buy set back_object = NULL,sell_order = %s WHERE goods_id = %d"% (sell_order,back_object["asset_info"]["goods_id"])
             until.sqlite_update(sql)
             print("上架goods_id ：%s,价格：%f =======================>>>>>>>>>>>>>>>>>>" % (str(back_object["asset_info"]["goods_id"]),price["sell_price"]))
 
@@ -257,7 +260,7 @@ def buyprice(str):
     num = a["num"]
     real_num = a["real_num"]
     if (num - real_num) >= 2:
-        return price
+        return float(price)
     else:
         b = j["data"]["items"][1]
         price_b = b["price"]
