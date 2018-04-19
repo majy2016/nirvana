@@ -19,7 +19,7 @@ def start():
         make(i)
         price = getGoodsPrice(i[0])
         # buy_order 为空才求购
-        if (price["sell_price"]-price["buy_price"]) >= i[5] and i[2] is None:
+        if (price["sell_price"]-price["buy_price"]) >= i[5] and i[2] is None and i[1] is None:
             #求购
             goods_id = i[0]
             price = price["buy_price"]
@@ -31,7 +31,7 @@ def start():
             print("求购结果 =========================================>>>>>>>>",r)
             if r["code"] =="OK":
                 s = r["data"]["id"]+"|"+str(price)
-                sql = "update goods_sell_buy set buy_order = %s WHERE goods_id = %s"%(s,goods_id)
+                sql = "update goods_sell_buy set buy_order = \"%s\" WHERE goods_id = %s"%(s,goods_id)
                 print(sql)
                 until.sqlite_update(sql)
     # 上架
@@ -43,12 +43,19 @@ def start():
 
 def sell_change():
     sellDict = getSellList()
+    print("====================>>>>>>>>>>>>>>当前售卖列表：",sellDict)
     for i in sellDict:
         r = getGoodsPrice(i)
-        if (float(sellDict[i][1])-r["sell_price"])>=0.03:
+        if (float(sellDict[i][1])-r["sell_price"])>0.01:
             # 改价
             changePrice(i,sellDict[i][0],r["sell_price"])
-
+    sql = "select * from goods_sell_buy WHERE sell_order is not NULL"
+    r = until.sqlite_select(sql)
+    for i in r:
+        if i[0] not in sellDict:
+            sql = "update goods_sell_buy set sell_order = NULL WHERE goods_id = \"%s\""%i[0]
+            print(sql)
+            until.sqlite_update(sql)
 
 def changePrice(goods_id, sell_order_id, price):
     url = "https://buff.163.com/api/market/sell_order/change"
@@ -73,6 +80,7 @@ def buy_change():
     sql = "select * from goods_sell_buy WHERE buy_order is not NULL"
     r = until.sqlite_select(sql)
     buylist = getBuyList()
+    print(" =======================>>>>>>>>>>>>>>>>>>当前求购列表：",buylist)
     for i in r :
         goods_id = i[0]
         buy_order = i[2].split("|")[0]
@@ -84,20 +92,22 @@ def buy_change():
             continue
         x = getGoodsPrice(goods_id)
         if x and (x["sell_price"]-x["buy_price"]) <sell_price:
+            print("==================.>>>>>>>>>>>>>>>求购调整：", x)
             #取消求购
-            cancelBuyOrder(buy_order)
+            cancelBuyOrder(i[2])
             continue
         if (x["buy_price"] - now_buy_price) >0.1 :
-            cancelBuyOrder(buy_order)
+            print("==================.>>>>>>>>>>>>>>>求购调整：", x)
+            cancelBuyOrder(i[2])
 
 
 
 
-def cancelBuyOrder(order_id):
+def cancelBuyOrder(order):
     url = "https://buff.163.com/api/market/buy_order/cancel"
     data = {
         "game": "pubg",
-        "buy_orders": [order_id]
+        "buy_orders": [order.split("|")[0]]
     }
     headers = {
         'Content-Type': 'application/json',
@@ -107,10 +117,12 @@ def cancelBuyOrder(order_id):
     r = until.make_request(url,"POST",data,headers)
     if r is None:
         return False
+    r = r.replace("null","1111")
+    r = eval(r)
     if r["code"] =="OK":
-        sql = "update goods_sell_buy set buy_order = NULL WHERE  buy_order = %s"%order_id
+        sql = "update goods_sell_buy set buy_order = NULL WHERE  buy_order = \"%s\""%order
         until.sqlite_update(sql)
-        print("取消求购 buy_order ： %s ====================================>>>>>>>>>>>>>>>>>"%order_id)
+        print("取消求购 buy_order ： %s ====================================>>>>>>>>>>>>>>>>>"%order)
 
 
 # 查询求购信息
@@ -121,10 +133,13 @@ def getBuyList():
         "X-CSRFToken": "ImRjOTBjNDIzNzkyZDBkNTA5ZjYzZjUyMjdmODU3OGJmNzI4M2Y1YzMi.DbWb7Q.DX1hDwcW0RGjKN5-d5VJyzlR5IE"
     }
     r = until.make_request(url,"GET" ,None,headers)
+    list = []
     if r is  None:
-        return []
+        return list
     bs = BeautifulSoup(r, "lxml")
-    list = bs.findAll("a", {"class": "i_Btn cancel-buy-order i_Btn_hollow"})
+    l = bs.findAll("a", {"class": "i_Btn cancel-buy-order i_Btn_hollow"})
+    for i in l:
+        list.append(i["data-orderid"])
     return list
 
 def createBuyOrder(goods_id, price, num, pay_method):
@@ -171,7 +186,7 @@ def sell():
         'Content-Type': 'application/json',
         "X-CSRFToken": "ImRjOTBjNDIzNzkyZDBkNTA5ZjYzZjUyMjdmODU3OGJmNzI4M2Y1YzMi.Dbb2kQ.udSbhbI-yDNuF7OhndaiNMnkTkU"
     }
-    sql = "select back_object from goods_sell_buy WHERE status = 1 and back_object is NOT NULL"
+    sql = "select back_object from goods_sell_buy WHERE   back_object is NOT NULL"
     r = until.sqlite_select(sql)
 
     for i in r:
@@ -193,13 +208,12 @@ def sell():
         r = until.make_request(url,"POST",data,headers)
         r = r.replace("null","1111")
         r = eval(r)
+        print("=================================>>>>>>>>>>>>>>>>>上架结果：",r)
         if r["code"] =="OK":
-            sell_order = None
-            for i in r.keys():
-                sell_order = i
+            sell_order = back_object["asset_info"]["assetid"]
             sql = "update goods_sell_buy set back_object = NULL,sell_order = %s WHERE goods_id = %d"% (sell_order,back_object["asset_info"]["goods_id"])
+            print(sql)
             until.sqlite_update(sql)
-            print("上架goods_id ：%s,价格：%f =======================>>>>>>>>>>>>>>>>>>" % (str(back_object["asset_info"]["goods_id"]),price["sell_price"]))
 
 
 # 查询售卖列表
