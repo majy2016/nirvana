@@ -31,12 +31,6 @@ def make_headers(h):
             headers[k] = v
     return headers
 
-#记录信息
-def make_log(msg):
-    #todo
-    pass
-
-
 #sqlite
 def sqlite_select(sql):
     r = []
