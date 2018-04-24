@@ -3,5 +3,8 @@ from makeOrder import start
 
 while True:
     print("start ====================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-    start()
-    time.sleep(300)
+    try:
+        start()
+    except Exception as e:
+        print("运行异常 ！",e)
+    time.sleep(210)
