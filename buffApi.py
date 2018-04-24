@@ -2,16 +2,14 @@
 封装调用网易BUFF行为接口请求
 
 """
-import json,ssl
+import json
 from bs4 import BeautifulSoup
 from until import make_request,sqlite_update
-
-ssl._create_default_https_context = ssl._create_unverified_context
 
 #上架
 def sell(on_sell_dict):
     url = "https://buff.163.com/api/market/sell_order/create/auto"
-    for (k,v) in on_sell_dict:
+    for (k,v) in on_sell_dict.items():
         game = v
         headers = {
             "Referer": "https://buff.163.com/market/backpack?game="+game,
@@ -19,6 +17,7 @@ def sell(on_sell_dict):
             "X-CSRFToken": "ImRjOTBjNDIzNzkyZDBkNTA5ZjYzZjUyMjdmODU3OGJmNzI4M2Y1YzMi.Dbb2kQ.udSbhbI-yDNuF7OhndaiNMnkTkU"
         }
         try:
+            k = k.replace("null", "1111")
             back_object = eval(k)
             price = getGoodsPrice(str(back_object["asset_info"]["goods_id"]))
             data = {
@@ -57,14 +56,15 @@ def createBuyOrder(on_buy_dict):
         "Referer": "https://buff.163.com/market/goods?goods_id=756022",
         "X-CSRFToken": "ImRjOTBjNDIzNzkyZDBkNTA5ZjYzZjUyMjdmODU3OGJmNzI4M2Y1YzMi.DbWb7Q.DX1hDwcW0RGjKN5-d5VJyzlR5IE"
     }
-
-    for (k,v) in on_buy_dict:
+    print(on_buy_dict)
+    for (k,v) in on_buy_dict.items():
         goods_id = k
         price = v[0]
         num = v[1]
         pay_method = v[2]
+        game = v[3]
         data = {
-            "game": "pubg",
+            "game": game,
             "goods_id": goods_id,
             "price": price,
             "num": num,
@@ -73,11 +73,12 @@ def createBuyOrder(on_buy_dict):
         }
         try:
             r = make_request(url,"POST",data,headers)
-            r = eval(r)
             print("求购结果 =========================================>>>>>>>>", r)
+            r = r.replace("null", "1111")
+            r = eval(r)
             if r["code"] == "OK":
                 s = "abcd"
-                sql = "update goods_sell_buy set buy_order = %s WHERE goods_id = %s" % (s, goods_id)
+                sql = "update goods_sell_buy set buy_order = %s WHERE goods_id = %s" % (s,goods_id)
                 print(sql)
                 sqlite_update(sql)
         except Exception as e:
@@ -93,7 +94,7 @@ def sell_change(on_change_dict,game):
         "Referer": "https://buff.163.com/market/sell_order/on_sale?game="+game,
         "X-CSRFToken": "ImRjOTBjNDIzNzkyZDBkNTA5ZjYzZjUyMjdmODU3OGJmNzI4M2Y1YzMi.DbWb7Q.DX1hDwcW0RGjKN5-d5VJyzlR5IE"
     }
-    for(k,v) in on_change_dict:
+    for(k,v) in on_change_dict.items():
         try:
             goods_id = k
             sell_order_id = v.split("|")[0]
@@ -144,7 +145,7 @@ def getBuyList(game):
 def getBackpack(game):
     url = "https://buff.163.com/api/market/backpack?game="+game+"&page_num=1"
     headers = {
-        "Referer": "https://buff.163.com/market/buy_order/wait_supply?game="+game
+        "Referer":"https://buff.163.com/market/buy_order/wait_supply?game="+game
        }
     r = make_request(url,"GET",None,headers)
     if r is None:
@@ -152,13 +153,13 @@ def getBackpack(game):
         return False
     j = json.loads(r)
     if j["code"] != "OK":
-        print("=================>>>>>>>>>>>>>>>>>>>>> 获取背包列表失败 !!!")
+        print("=================>>>>>>>>>>>>>>>>>>>>> 获取背包列表失败 2 !!!",r)
         return False
     return j["data"]["items"]
 
 #取消求购
 def cancelBuyOrder(on_cancel_dict):
-    for (order_id,game) in on_cancel_dict:
+    for (order_id,game) in on_cancel_dict.items():
         url = "https://buff.163.com/api/market/buy_order/cancel"
         data = {
             "game": game,

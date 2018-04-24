@@ -17,8 +17,8 @@ fee_p = 0.018
 def sysnc():
     sql = "select * from goods_sell_buy"
     x = until.sqlite_select(sql)
-    back_list = buffApi.getBackpack("pbug")
-    sell_list = buffApi.getSellList("pbug")
+    back_list = buffApi.getBackpack("pubg")
+    sell_list = buffApi.getSellList("pubg")
     for i in x:
         goods_id = i[0]
         # 将背包里的东西更新入数据库，并且更新订单
@@ -50,7 +50,7 @@ def start_service():
     #待求购
     on_buy_dict = {}
 
-    sql = "select * from goods_sell_buy"
+    sql = "select * from goods_sell_buy where status = 1"
     x = until.sqlite_select(sql)
 
     for i in x :
@@ -59,20 +59,20 @@ def start_service():
         # 对不买的产品的求购加入下架列表
         if i[4] == 0 and i[2] is not None:
             buy_order = i[2].split("|")[0]
-            on_cancel_dict[buy_order] = "pbug"
+            on_cancel_dict[buy_order] = "pubg"
             continue
 
         # 数据采集、价格分析
-        goods_ana = buffApi.getGoodsPrice()
+        goods_ana = buffApi.getGoodsPrice(goods_id,"pubg",low_price,fee_p,i[5])
 
         if goods_ana :
             #求购
             if goods_ana["buy"] and i[1] is None and i[2] is None:
-                on_buy_dict[goods_id]= [goods_ana["buy_price"],1,"3","pbug"]
+                on_buy_dict[goods_id]= [goods_ana["buy_price"],1,"3","pubg"]
             #取消
             if not goods_ana["buy"] and i[2] is not None:
                 buy_order = i[2].split("|")[0]
-                on_cancel_dict[buy_order] = "pbug"
+                on_cancel_dict[buy_order] = "pubg"
             #改价
             if i[1] is not None:
                 now_sell_price = float(i[1].split("1")[1])
@@ -82,9 +82,10 @@ def start_service():
 
         #上架
         if i[3] is not None :
-            on_sell_dict[i[3]]="pbug"
+            on_sell_dict[i[3]]="pubg"
 
     #处理结果
     buffApi.cancelBuyOrder(on_cancel_dict)
-    buffApi.sell_change(on_change_dict)
+    buffApi.sell_change(on_change_dict,"pubg")
     buffApi.sell(on_sell_dict)
+    buffApi.createBuyOrder(on_buy_dict)
