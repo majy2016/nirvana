@@ -184,7 +184,6 @@ def getSellList():
     bs = BeautifulSoup(r.text, "lxml")
     # print(bs)
     list = bs.findAll("li", {"class": "salable"})
-    print(list)
     result = {}
     for i in list:
         result[i["data-goodsid"]] = [i["data-orderid"],i["data-price"]]
@@ -192,7 +191,7 @@ def getSellList():
 
 
 
-# getSellList()
+getSellList()
 
 # 改价
 # https://buff.163.com/api/market/sell_order/change
