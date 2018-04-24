@@ -77,7 +77,7 @@ def createBuyOrder(on_buy_dict):
             r = r.replace("null", "1111")
             r = eval(r)
             if r["code"] == "OK":
-                s = "abcd"
+                s = r["data"]["id"]+"|"+str(price)
                 sql = "update goods_sell_buy set buy_order = %s WHERE goods_id = %s" % (s,goods_id)
                 print(sql)
                 sqlite_update(sql)
