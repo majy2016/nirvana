@@ -1,7 +1,11 @@
 import time,datetime
-from makeOrder import start
+from makeOrder import sysnc,start_service
 
 while True:
     print("start ====================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-    start()
+    try:
+        sysnc()
+        start_service()
+    except Exception as e :
+        print(e)
     time.sleep(90)

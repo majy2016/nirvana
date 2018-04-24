@@ -219,7 +219,7 @@ def changePrice(goods_id, sell_order_id, price):
     print(r.text)
 
 
-changePrice(33232,"180417T1095187850",0.7)
+# changePrice(33232,"180417T1095187850",0.7)
 
 # 查询背包列表
 def getBackpack():
