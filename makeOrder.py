@@ -78,7 +78,7 @@ def start_service():
             if i[1] is not None:
                 now_sell_price = float(i[1].split("|")[1])
                 new_sell_price = goods_ana["sell_price"]
-                if (now_sell_price - new_sell_price) >=0.03:
+                if (now_sell_price - new_sell_price)>=0.02:
                     on_change_dict[goods_id]=i[1].replace(str(now_sell_price),str(new_sell_price))
 
         #上架
@@ -87,7 +87,7 @@ def start_service():
 
 
     #处理结果
-    buffApi.cancelBuyOrder(on_cancel_dict)
+    # buffApi.cancelBuyOrder(on_cancel_dict)
     buffApi.sell_change(on_change_dict,"pubg")
-    buffApi.sell(on_sell_dict)
-    buffApi.createBuyOrder(on_buy_dict)
+    # buffApi.sell(on_sell_dict)
+    # buffApi.createBuyOrder(on_buy_dict)

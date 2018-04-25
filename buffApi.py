@@ -176,8 +176,11 @@ def cancelBuyOrder(on_cancel_dict):
         }
         try:
             r = make_request(url,"POST",data,headers)
+            print(r)
+            r = r.replace("null", "1111")
+            r = eval(r)
             if r["code"] =="OK":
-                sql = "update goods_sell_buy set buy_order = NULL WHERE  buy_order = \"%s\""%k
+                sql = "update goods_sell_buy set buy_order = null WHERE  buy_order = \"%s\""%k
                 sqlite_update(sql)
                 print("取消求购 buy_order ： %s ====================================>>>>>>>>>>>>>>>>>"%k)
         except Exception as e:
