@@ -74,6 +74,13 @@ def start_service():
             #取消
             if not goods_ana["buy"] and i[2] is not None:
                 on_cancel_dict[i[2]] = "pubg"
+
+            if goods_ana["buy"] and i[2] is not None and i[4] ==1 :
+                now_buy_price = float(i[2].split("|")[1])
+                buy_price = goods_ana["buy_price"]
+                if (buy_price - now_buy_price) >0.19 or (now_buy_price - buy_price) >0.19:
+                    on_cancel_dict[i[2]] = "pubg"
+
             #改价
             if i[1] is not None:
                 now_sell_price = float(i[1].split("|")[1])
