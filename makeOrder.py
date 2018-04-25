@@ -87,7 +87,7 @@ def start_service():
 
 
     #处理结果
-    # buffApi.cancelBuyOrder(on_cancel_dict)
+    buffApi.cancelBuyOrder(on_cancel_dict)
     buffApi.sell_change(on_change_dict,"pubg")
-    # buffApi.sell(on_sell_dict)
-    # buffApi.createBuyOrder(on_buy_dict)
+    buffApi.sell(on_sell_dict)
+    buffApi.createBuyOrder(on_buy_dict)

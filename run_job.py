@@ -8,4 +8,4 @@ while True:
         start_service()
     except Exception as e :
         print(e)
-    time.sleep(90)
+    time.sleep(120)
