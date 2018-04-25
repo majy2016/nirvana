@@ -10,7 +10,7 @@ from until import make_request,sqlite_update
 def sell(on_sell_dict):
     url = "https://buff.163.com/api/market/sell_order/create/auto"
     for (k,v) in on_sell_dict.items():
-        game = v
+        game = v[0]
         headers = {
             "Referer": "https://buff.163.com/market/backpack?game="+game,
             'Content-Type': 'application/json',
@@ -19,7 +19,11 @@ def sell(on_sell_dict):
         try:
             k = k.replace("null", "1111")
             back_object = eval(k)
-            price = getGoodsPrice(str(back_object["asset_info"]["goods_id"]))
+            good_ids = str(back_object["asset_info"]["goods_id"])
+            low_price = v[1]
+            fee_p = v[2]
+            win_price =v[3]
+            price = getGoodsPrice(good_ids,game,low_price, fee_p, win_price)
             data = {
                 "game": game,
                 "assets": [{
@@ -34,17 +38,13 @@ def sell(on_sell_dict):
                 }]
             }
             r = make_request(url, "POST", data, headers)
+            print("上架结果： =======================>>>>>>>>>>>>>>>>>>",r)
             r = r.replace("null", "1111")
             r = eval(r)
             if r["code"] == "OK":
-                sell_order = None
-                for i in r.keys():
-                    sell_order = i
-                sql = "update goods_sell_buy set back_object = NULL,sell_order = %s WHERE goods_id = %d" % (
-                sell_order, back_object["asset_info"]["goods_id"])
+                sell_order = r["data"]
+                sql = "update goods_sell_buy set back_object = NULL,sell_order = \"%s\" WHERE goods_id = %d" % (sell_order, back_object["asset_info"]["goods_id"])
                 sqlite_update(sql)
-                print("上架goods_id ：%s,价格：%f =======================>>>>>>>>>>>>>>>>>>" % (
-                str(back_object["asset_info"]["goods_id"]), price["sell_price"]))
         except Exception as e:
             print("上架异常 ===============>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",e)
 
@@ -134,11 +134,14 @@ def getBuyList(game):
         "X-CSRFToken": "ImRjOTBjNDIzNzkyZDBkNTA5ZjYzZjUyMjdmODU3OGJmNzI4M2Y1YzMi.DbWb7Q.DX1hDwcW0RGjKN5-d5VJyzlR5IE"
     }
     r = make_request(url,"GET" ,None,headers)
+    ll = []
     if r is  None:
-        return []
+        return ll
     bs = BeautifulSoup(r, "lxml")
     list = bs.findAll("a", {"class": "i_Btn cancel-buy-order i_Btn_hollow"})
-    return list
+    for l in list:
+        ll.append(l["data-orderid"]+"|"+l["data-price"])
+    return ll
 
 
 # 查询背包列表

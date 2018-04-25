@@ -38,6 +38,7 @@ def sysnc():
                 until.sqlite_update(sql)
 
 
+
 #处理数据
 def start_service():
 
@@ -50,7 +51,7 @@ def start_service():
     #待求购
     on_buy_dict = {}
 
-    sql = "select * from goods_sell_buy where status = 1"
+    sql = "select * from goods_sell_buy "
     x = until.sqlite_select(sql)
 
     for i in x :
@@ -60,14 +61,15 @@ def start_service():
         if i[4] == 0 and i[2] is not None:
             buy_order = i[2].split("|")[0]
             on_cancel_dict[buy_order] = "pubg"
-            continue
 
         # 数据采集、价格分析
-        goods_ana = buffApi.getGoodsPrice(goods_id,"pubg",low_price,fee_p,i[5])
+        goods_ana = False
+        if i[1] is not None or i[4] ==1:
+            goods_ana = buffApi.getGoodsPrice(goods_id,"pubg",low_price,fee_p,i[5])
 
         if goods_ana :
             #求购
-            if goods_ana["buy"] and i[1] is None and i[2] is None:
+            if goods_ana["buy"] and i[1] is None and i[2] is None and i[4] ==1:
                 on_buy_dict[goods_id]= [goods_ana["buy_price"],1,"3","pubg"]
             #取消
             if not goods_ana["buy"] and i[2] is not None:
@@ -75,14 +77,15 @@ def start_service():
                 on_cancel_dict[buy_order] = "pubg"
             #改价
             if i[1] is not None:
-                now_sell_price = float(i[1].split("1")[1])
+                now_sell_price = float(i[1].split("|")[1])
                 new_sell_price = goods_ana["sell_price"]
                 if (now_sell_price - new_sell_price) >=0.03:
                     on_change_dict[goods_id]=i[1].replace(str(now_sell_price),str(new_sell_price))
 
         #上架
         if i[3] is not None :
-            on_sell_dict[i[3]]="pubg"
+            on_sell_dict[i[3]]=["pubg",low_price,fee_p,i[5]]
+
 
     #处理结果
     buffApi.cancelBuyOrder(on_cancel_dict)
