@@ -78,7 +78,7 @@ def createBuyOrder(on_buy_dict):
             r = eval(r)
             if r["code"] == "OK":
                 s = r["data"]["id"]+"|"+str(price)
-                sql = "update goods_sell_buy set buy_order = %s WHERE goods_id = %s" % (s,goods_id)
+                sql = "update goods_sell_buy set buy_order = \"%s\" WHERE goods_id = %s" % (s,goods_id)
                 print(sql)
                 sqlite_update(sql)
         except Exception as e:
@@ -162,7 +162,8 @@ def getBackpack(game):
 
 #取消求购
 def cancelBuyOrder(on_cancel_dict):
-    for (order_id,game) in on_cancel_dict.items():
+    for (k,game) in on_cancel_dict.items():
+        order_id = k.split("|")[0]
         url = "https://buff.163.com/api/market/buy_order/cancel"
         data = {
             "game": game,
@@ -176,9 +177,9 @@ def cancelBuyOrder(on_cancel_dict):
         try:
             r = make_request(url,"POST",data,headers)
             if r["code"] =="OK":
-                sql = "update goods_sell_buy set buy_order = NULL WHERE  buy_order = %s"%order_id
+                sql = "update goods_sell_buy set buy_order = NULL WHERE  buy_order = \"%s\""%k
                 sqlite_update(sql)
-                print("取消求购 buy_order ： %s ====================================>>>>>>>>>>>>>>>>>"%order_id)
+                print("取消求购 buy_order ： %s ====================================>>>>>>>>>>>>>>>>>"%k)
         except Exception as e:
             print(" =====================>>>>>>>>>>>>>>>>>>>>>>>取消求购出错",order_id,e)
 
@@ -202,7 +203,7 @@ def getGoodsPrice(goods_id,game,low_price,fee_p,win_price):
         if sell_price < low_price:
             x = sell_price - buy_price - 0.1
         else:
-            x = (sell_price*fee_p) - buy_price
+            x = (sell_price*(1 - fee_p)) - buy_price
         result = {}
         if x < win_price:
             print("===================>>>>>>>>>>>. 利润过小",goods_id)

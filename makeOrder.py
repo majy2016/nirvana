@@ -29,7 +29,7 @@ def sysnc():
                     until.sqlite_update(sql)
                     break
         if sell_list:
-            if goods_id not in sell_list and i[2] is not None:
+            if goods_id not in sell_list and i[1] is not None:
                 sql = "update goods_sell_buy set sell_order = null WHERE goods_id = %s" % goods_id
                 until.sqlite_update(sql)
             if goods_id in sell_list:
@@ -73,8 +73,7 @@ def start_service():
                 on_buy_dict[goods_id]= [goods_ana["buy_price"],1,"3","pubg"]
             #取消
             if not goods_ana["buy"] and i[2] is not None:
-                buy_order = i[2].split("|")[0]
-                on_cancel_dict[buy_order] = "pubg"
+                on_cancel_dict[i[2]] = "pubg"
             #改价
             if i[1] is not None:
                 now_sell_price = float(i[1].split("|")[1])
