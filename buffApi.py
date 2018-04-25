@@ -206,7 +206,10 @@ def getGoodsPrice(goods_id,game,low_price,fee_p,win_price):
         if sell_price < low_price:
             x = sell_price - buy_price - 0.1
         else:
-            x = (sell_price*(1 - fee_p)) - buy_price
+            fee = sell_price * fee_p
+            if fee < 0.5:
+                fee = 0.5
+            x = sell_price - buy_price - fee
         result = {}
         if x < win_price:
             print("===================>>>>>>>>>>>. 利润过小",goods_id)
