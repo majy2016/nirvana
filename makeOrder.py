@@ -69,7 +69,7 @@ def start_service():
 
         if goods_ana :
             #求购
-            if goods_ana["buy"] and i[1] is None and i[2] is None and i[4] ==1:
+            if goods_ana["buy"] and i[1] is None and i[2] is None and i[4] ==1 and i[3] is None:
                 on_buy_dict[goods_id]= [goods_ana["buy_price"],1,"3","pubg"]
             #取消
             if not goods_ana["buy"] and i[2] is not None:
